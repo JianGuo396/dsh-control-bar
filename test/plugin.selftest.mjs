@@ -113,6 +113,16 @@ for (const dispose of disposers) {
 }
 check('日志里没有 error', !logs.some((entry) => entry[0] === 'error'), logs.filter((entry) => entry[0] === 'error'))
 
+// —— output.render 契约：宿主 createSuccessResult 会把 render 结果当 content 用 ——
+for (const tool of registered) {
+  const out = tool.output
+  check(tool.name + " 有 output.schema", !!(out && out.schema), out && Object.keys(out))
+  check(tool.name + " 有 output.render", !!(out && typeof out.render === "function"), typeof (out && out.render))
+  const blocks = out && typeof out.render === "function" ? out.render({}, { ok: true }) : null
+  check(tool.name + " render 返回内容块数组", Array.isArray(blocks) && blocks.length > 0, blocks)
+  check(tool.name + " 内容块是 text", Array.isArray(blocks) && blocks.every((b) => b.type === "text" && typeof b.text === "string"), blocks)
+}
 rmSync(dataDir, { recursive: true, force: true })
 console.log(failures === 0 ? 'ALL PASS' : `${failures} FAILED`)
 process.exit(failures === 0 ? 0 : 1)
+
