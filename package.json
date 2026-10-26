@@ -1,0 +1,74 @@
+{
+  "name": "dsh-control-bar",
+  "version": "0.1.0",
+  "description": "操控状态栏：模型操作你的电脑时，屏幕顶部常驻一条进度栏，并标出当前是 DeepSeek 峰时还是谷时——大额 token 的操作在峰时先问你一句，谷时直接干。",
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "icon.svg",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "status-bar",
+    "overlay",
+    "progress",
+    "peak-valley",
+    "pricing",
+    "electron",
+    "desktop"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/JianGuo396/dsh-control-bar",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "bin": {
+    "dsh-control-bar": "lib/cli.mjs"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "assets",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.0-rc.1": "compatible",
+        "0.2.0-rc.2": "compatible",
+        "0.2.1-rc.2": "compatible",
+        "0.2.1-rc.3": "compatible"
+      }
+    }
+  },
+  "_comment": [
+    "type: module —— 本包是 ESM（lib/phase.cjs 是唯一的 CommonJS 文件：宿主、覆盖层主进程、渲染端三处共用同一份峰谷算法）",
+    "main: lib/index.js —— 宿主半侧入口（Cordis 插件：name/apply）",
+    "本包没有浏览器半侧（不声明 dsh.client）：状态栏是 OS 级置顶窗，不需要页面里再画一条",
+    "dsh.bundle.patch —— 声明本包是 bundle，安装后 cordis.patch.yml 自动进层栈",
+    "dsh.compatibility.dshReleases —— 商城上架契约要求：最新三版里至少有一个 compatible",
+    "icon —— 插件管理页图标，svg，必须留在包目录内",
+    "bin —— 命令行控制（脚本/其它 Agent 也能用），见 README",
+    "peerDependencies —— 由宿主 DSH 提供的模块，本包不打包",
+    "peerDependencies 故意留空：cordis/dsh-tools 由宿主提供，本包只用普通对象与动态 import，装不上也不影响加载"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JianGuo396/dsh-control-bar"
+  },
+  "bugs": {
+    "url": "https://github.com/JianGuo396/dsh-control-bar/issues"
+  }
+}

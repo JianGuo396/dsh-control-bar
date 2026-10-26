@@ -1,0 +1,8 @@
+# 提交到 https://github.com/awesome-dsh-plugin/awesome-dsh-plugin
+# 文件路径：data/plugins/JianGuo396__dsh-control-bar.yml
+url: https://github.com/JianGuo396/dsh-control-bar
+name: JianGuo396/dsh-control-bar
+category: ui
+description:
+  en: 'Pins an always-on-top progress bar to the top of the screen while the agent drives your computer, and badges the current DeepSeek peak/off-peak pricing window so large token operations ask for confirmation only during peak hours.'
+  zh: '模型操作你的电脑时，屏幕顶部常驻一条带真实百分比的进度栏，并标出当前是 DeepSeek 峰时还是谷时——大额 token 的操作只在峰时先问你一句，谷时直接做。'
