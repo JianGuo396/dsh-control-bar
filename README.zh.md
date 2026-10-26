@@ -18,6 +18,12 @@
 dsh plugin --profile desktop add dsh-control-bar
 ```
 
+也可以直接从仓库装（没发 npm 时的等价写法，本包没有构建步骤，装完即用）：
+
+```sh
+dsh plugin --profile desktop add github:JianGuo396/dsh-control-bar
+```
+
 状态栏是一个独立 Electron 进程，不占用 DSH 自己的窗口。它在启动时按这个顺序找可用的
 Electron：`overlay.electronPath` → `DSH_CONTROL_BAR_ELECTRON` → `DSH_ELECTRON_PATH` →
 `$DSH_HOME/electron` → `~/.dsh/electron`（[dsh-pet](https://www.npmjs.com/package/dsh-pet)

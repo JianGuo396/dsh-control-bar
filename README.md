@@ -23,6 +23,12 @@ Or from a CLI (`desktop` = your profile name):
 dsh plugin --profile desktop add dsh-control-bar
 ```
 
+Or straight from the repository (same thing before the npm release; there is no build step):
+
+```sh
+dsh plugin --profile desktop add github:JianGuo396/dsh-control-bar
+```
+
 The bar is a separate Electron process, so it needs an Electron binary. Lookup order:
 `overlay.electronPath` → `DSH_CONTROL_BAR_ELECTRON` → `DSH_ELECTRON_PATH` → `$DSH_HOME/electron`
 → `~/.dsh/electron` (installing [dsh-pet](https://www.npmjs.com/package/dsh-pet) puts one there).
