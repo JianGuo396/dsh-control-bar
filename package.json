@@ -1,6 +1,6 @@
 {
   "name": "dsh-control-bar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "操控状态栏：模型操作你的电脑时，屏幕顶部常驻一条进度栏，并标出当前是 DeepSeek 峰时还是谷时——大额 token 的操作在峰时先问你一句，谷时直接干。",
   "type": "module",
   "main": "lib/index.js",

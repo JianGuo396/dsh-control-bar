@@ -15,6 +15,7 @@ const registered = []
 const sections = []
 const disposers = []
 const logs = []
+const eventHandlers = new Map()
 
 const ctxStub = {
   tools: {
@@ -50,9 +51,26 @@ const root = {
   inject(_deps, callback) {
     callback(ctxStub)
   },
+  on(event, handler) {
+    const list = eventHandlers.get(event) || []
+    list.push(handler)
+    eventHandlers.set(event, list)
+    return () => {
+      const rest = (eventHandlers.get(event) || []).filter((fn) => fn !== handler)
+      eventHandlers.set(event, rest)
+    }
+  },
 }
 
 let failures = 0
+function emitEvent(event) {
+  for (const handler of eventHandlers.get('session/event') || []) handler({ header: { id: 's1' } }, event)
+}
+
+function readStateFile() {
+  return JSON.parse(readFileSync(join(dataDir, 'state.json'), 'utf8'))
+}
+
 function check(name, condition, detail) {
   if (condition) {
     console.log(`ok   ${name}`)
@@ -92,7 +110,11 @@ const finished = await controlBar.execute({ action: 'finish', text: '找到了' 
 check('finish 补到 100', finished.percent === 100 && finished.text === '找到了', finished)
 
 const stateAfter = JSON.parse(readFileSync(join(dataDir, 'state.json'), 'utf8'))
-check('状态文件落盘', stateAfter.done === true && stateAfter.active === false, stateAfter)
+check('finish 先满格停留', stateAfter.done === true && stateAfter.active === true && stateAfter.percent === 100, stateAfter)
+
+await new Promise((resolve) => setTimeout(resolve, 1350))
+const stateSettled = JSON.parse(readFileSync(join(dataDir, 'state.json'), 'utf8'))
+check('finish 之后自动收条', stateSettled.active === false, stateSettled)
 
 const phase = await peakValley.execute({}, {})
 check('peak_valley 给出时段', phase.phase === 'peak' || phase.phase === 'off-peak', phase.phase)
@@ -102,6 +124,51 @@ check('peak_valley 守门建议与时段一致', phase.largeTokenNeedsConfirmati
 const promptText = sections[0].text()
 check('提示文案含状态栏动作', promptText.includes('control_bar'), promptText.slice(0, 60))
 check('提示文案含当前峰谷', promptText.includes('当前：'), promptText.slice(-200))
+
+// —— 回合生命周期：状态栏必须跟着回合开合，不能指望模型记得收尾 ——
+check('订阅了 session/event', (eventHandlers.get('session/event') || []).length === 1, [...eventHandlers.keys()])
+
+emitEvent({ type: 'turn/start', data: {} })
+let st = readStateFile()
+check('turn/start 自动亮条', st.active === true && st.title === '正在工作', st)
+check('turn/start 进度从 4% 起', st.percent === 4, st.percent)
+
+emitEvent({ type: 'tool/call', data: { name: 'ops_bash' } })
+st = readStateFile()
+check('tool/call 换文案为「执行命令」', st.text === '执行命令', st.text)
+check('tool/call 算操控，标题转「正在操控」', st.title === '正在操控', st.title)
+check('tool/call 进度前进', st.percent > 4 && st.percent < 100, st.percent)
+
+for (let i = 0; i < 6; i += 1) emitEvent({ type: 'tool/call', data: { name: 'read' } })
+st = readStateFile()
+check('多次调用后进度仍 <95', st.percent < 95, st.percent)
+check('读文件的文案是「读写文件」', st.text === '读写文件', st.text)
+
+emitEvent({ type: 'turn/end', data: { reason: { kind: 'completed' } } })
+st = readStateFile()
+check('turn/end 立刻补到 100%', st.percent === 100 && st.done === true, st)
+check('turn/end 文案为「完成」', st.title === '完成', st.title)
+
+await new Promise((resolve) => setTimeout(resolve, 1350))
+st = readStateFile()
+check('1.2 秒后自动收条', st.active === false, st)
+
+// 中断/报错也必须收条，不留悬挂进度条
+emitEvent({ type: 'turn/start', data: {} })
+emitEvent({ type: 'tool/call', data: { name: 'bsk_inspect' } })
+emitEvent({ type: 'agent/error', data: {} })
+st = readStateFile()
+check('agent/error 也收条', st.percent === 100 && st.done === true, st)
+await new Promise((resolve) => setTimeout(resolve, 1350))
+check('报错后同样自动隐藏', readStateFile().active === false, readStateFile())
+
+// 小工具文案映射：没命中的直接显示工具名
+emitEvent({ type: 'turn/start', data: {} })
+emitEvent({ type: 'tool/call', data: { name: 'some_random_tool' } })
+check('未知工具直接显示工具名', readStateFile().text === 'some_random_tool', readStateFile().text)
+emitEvent({ type: 'turn/end', data: { reason: { kind: 'error' } } })
+await new Promise((resolve) => setTimeout(resolve, 1350))
+
 
 for (const dispose of disposers) {
   try {

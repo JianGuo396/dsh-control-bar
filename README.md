@@ -37,11 +37,18 @@ If nothing is found the bar is skipped, everything else keeps working, and the h
 
 ## Usage
 
-Nothing to do after installing: the plugin adds a prompt section and the agent maintains the bar.
+Nothing to do after installing, and nothing the model has to remember — the bar follows the agent's
+**turn**, the same way codex's status line does:
 
-1. start — `control_bar` with `action:"start"`, `text:"<what this round is about>"`;
-2. each visible step — `action:"update"`, `percent:<0-100>`;
-3. end — `action:"finish"` (the bar fills to 100% before fading out).
+| Host event | Bar |
+|---|---|
+| `turn/start` | appears with "正在工作" / "正在处理你的请求" at 4% |
+| every `tool/call` | label switches to what is happening (执行命令 / 读写文件 / 查资料 / 操作浏览器…), progress advances on a monotonic curve |
+| `turn/end` or `agent/error` | fills to 100% ("完成"), waits 1.2 s, then hides itself |
+
+A turn that is interrupted, fails, or is simply forgotten can no longer leave a bar hanging on screen.
+`control_bar` still works (`start`/`update`/`finish`/`hide`) when the model wants to report an exact
+percentage while driving your desktop.
 
 Manual control, also handy from scripts:
 
